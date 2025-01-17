@@ -30,7 +30,7 @@ module.exports = function (app) {
 		const { issue_title, issue_text, created_by } = req.body;
 
 		if (!issue_title || !issue_text || !created_by) {
-			return res.status(400).json({ error: 'required field(s) missing' });
+			return res.json({ error: 'required field(s) missing' });
 		}
 
     	let project = req.params.project;
@@ -55,13 +55,13 @@ module.exports = function (app) {
     // Check for missing _id
     	if (!_id) {
        		 console.log('No _id provided');
-        	return res.status(400).json({ error: 'missing _id' });
+        	return res.json({ error: 'missing _id' });
     	}
 
     // Check for invalid _id format
     	if (!mongoose.Types.ObjectId.isValid(_id)) {
         	console.log('Invalid _id format:', _id);
-        	return res.status(400).json({ error: 'invalid _id format' });
+        	return res.json({ error: 'invalid _id format' });
     	}
 
     	const update = req.body;
@@ -78,7 +78,7 @@ module.exports = function (app) {
 
         	if (!issue) {
             	console.log('No issue found with _id:', _id);
-            	return res.status(404).json({ error: 'could not update', _id });
+            	return res.json({ error: 'could not update', _id });
         	}
 
         	console.log('Issue successfully updated:', issue);
