@@ -52,7 +52,10 @@ module.exports = function (app) {
     	const project = req.params.project;
     	const _id = req.body._id;
 
-    // Check for missing _id
+		if (!req.body.issue_title && !req.body.issue_test && !req.body.created_by && !req.body.assigned_to && !req.body.status_text) {
+			return res.json({error: 'no update field(s) sent', _id: _id})
+		}
+
     	if (!_id) {
        		 console.log('No _id provided');
         	return res.json({ error: 'missing _id' });
@@ -95,23 +98,23 @@ module.exports = function (app) {
 		const _id = req.body._id;
 
 		if (!_id) {
-			return res.status(400)
+			return res.json({error: 'missing _id'})
 		} else if (!mongoose.Types.ObjectId.isValid(_id)) {
-			return res.status(400);
+			return res.json({error: 'could not delete', _id: _id});
 		}
 
 		try {
 			const issue = await Issue.findOneAndDelete({_id: _id});
 
 			if (!issue) {
-				return res.status(404).json({error: 'could not delete', _id: _id})
+				return res.json({error: 'could not delete', _id: _id})
 			}
 
 			res.status(200).json({result: 'successfully deleted', _id: _id})
 
 		} catch (err) {
 			console.error(err);
-			res.status(404).json({error: 'could not delete', _id: _id});
+			res.json({error: 'could not delete', _id: _id});
 		}
       
 
