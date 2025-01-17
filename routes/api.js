@@ -57,17 +57,16 @@ module.exports = function (app) {
         	return res.json({ error: 'missing _id' });
     	}
 
-		if (!req.body.issue_title && !req.body.issue_test && !req.body.created_by && !req.body.assigned_to && !req.body.status_text) {
-			return res.json({error: 'no update field(s) sent', _id: _id})
-		}
-
-    // Check for invalid _id format
-    	if (!mongoose.Types.ObjectId.isValid(_id)) {
+		if (!mongoose.Types.ObjectId.isValid(_id)) {
         	console.log('Invalid _id format:', _id);
         	return res.json({ error: 'could not update' });
     	}
 
-    	const update = req.body;
+		if (!req.body.issue_title && !req.body.issue_text && !req.body.created_by && !req.body.assigned_to && !req.body.status_text) {
+			return res.json({error: 'no update field(s) sent', _id: _id})
+		}
+
+    	    	const update = req.body;
     	delete update._id; // Prevent updates to the immutable _id field
 
     	try {
