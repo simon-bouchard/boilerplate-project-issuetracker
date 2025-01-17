@@ -49,27 +49,46 @@ module.exports = function (app) {
     })
     
     .put(async (req, res) => {
-    	let project = req.params.project;
-		let _id = req.body._id;
+    	const project = req.params.project;
+    	const _id = req.body._id;
 
-		const update = req.body;
-		delete update._id;
+    // Check for missing _id
+    	if (!_id) {
+       		 console.log('No _id provided');
+        	return res.status(400).json({ error: 'missing _id' });
+    	}
 
-		try {
-			const issue = await Issue.findOneAndUpdate(
-				{_id: _id},
-				update
-			);
-			if (!issue) {
-				return res.status(404).json({error: 'could not update', _id: _id})
-			}
-		} catch (err) {
-			return res.status(404).json({ error: 'could not update', _id: _id });
-		};
+    // Check for invalid _id format
+    	if (!mongoose.Types.ObjectId.isValid(_id)) {
+        	console.log('Invalid _id format:', _id);
+        	return res.status(400).json({ error: 'invalid _id format' });
+    	}
 
-		return res.status(200).json({result: 'successfully updated', _id: _id});
-      
-    })
+    	const update = req.body;
+    	delete update._id; // Prevent updates to the immutable _id field
+
+    	try {
+        	console.log('Attempting to update issue with _id:', _id);
+
+        	const issue = await Issue.findOneAndUpdate(
+            	{ _id },
+            	{ ...update, updated_on: new Date() }, // Update fields and set updated_on
+            	{ new: true } // Return updated document and validate updates
+        	);
+
+        	if (!issue) {
+            	console.log('No issue found with _id:', _id);
+            	return res.status(404).json({ error: 'could not update', _id });
+        	}
+
+        	console.log('Issue successfully updated:', issue);
+        	return res.status(200).json({ result: 'successfully updated', _id });
+    	} catch (err) {
+       	 	console.error('Error during update:', err.message);
+        	return res.status(500).json({ error: 'server error', details: err.message });
+    	}
+	})
+
     
     .delete(async (req, res) => {
     	let project = req.params.project;
