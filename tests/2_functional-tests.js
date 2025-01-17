@@ -98,7 +98,7 @@ suite('Functional Tests', function() {
 				status_text: 'something'
 			})
 			.end((err, res) => {
-				assert.equal(res.status, 400, 'Response status should be 400');
+				assert.equal(res.body.error, 'required field(s) missing', 'Response should be "required field(s) missing"');
 				
 				done()
 			})	
@@ -231,6 +231,33 @@ suite('Functional Tests', function() {
 	    assert.closeTo(updatedTime, nowTime, 5000, 'updated_on should be close to the current time');
 	});
 
+	test('Update issue with no id', async () => {
+
+		const res = await chai
+			.request(server)
+			.keepOpen()
+			.put('/api/issues/project')
+			.send({
+				created_by: 'Po'
+			});
+		assert.equal(res.body.error, 'missing _id', 'Result should be an error')
+			
+	})
+
+	test('Update issue with no fields to update', async () => {
+
+		const res = await chai
+			.request(server)
+			.keepOpen()
+			.put('/api/issues/project')
+			.send({
+				_id: issue_id,
+			});
+		assert.deepEqual(res.body, {error: 'no update field(s) sent', _id: issue_id}, 'Result should be an error')
+			
+	});
+
+
 	test('Update an issue with invalid _id with PUT request', (done) => {
 
 		chai
@@ -245,28 +272,28 @@ suite('Functional Tests', function() {
 
 			})
 			.end((err, res) => {
-				assert.equal(res.status, 404, 'Response status should be 404');
-				assert.deepEqual(res.body, {error: 'could not update', _id: '000000000000000000000000'});
+				assert.deepEqual(res.body, {error: 'could not update', _id: '000000000000000000000000'})
       				
 				done()
 			})	
 	});
 
-	test('Delete an issue', (done) => {
+	test('Delete an issue', async() => {
 
-		chai
+		const res = await chai
 			.request(server)
 			.keepOpen()
 			.delete('/api/issues/project')
 			.send({
 				_id: issue_id,
 			})
-			.end((err, res) => {
-				assert.equal(res.status, 200, 'Response status should be 200');
-      			assert.equal(res.body.result, 'successfully deleted', 'Response result should be different');
-				assert.equal(res.body._id, issue_id, 'Response _id should be different');
-				done()
-			})	
+		assert.equal(res.status, 200, 'Response status should be 200');
+      	assert.equal(res.body.result, 'successfully deleted', 'Response result should be different');
+		assert.equal(res.body._id, issue_id, 'Response _id should be different');
+			
+		let issue = await Issue.findOne({_id: issue_id});
+
+		assert.isNull(issue, 'issue should be deleted')
 	});
 
 	test('Delete an issue with invalid id', (done) => {
@@ -279,7 +306,7 @@ suite('Functional Tests', function() {
 				_id: '000000000000000000000000',
 			})
 			.end((err, res) => {
-				assert.equal(res.status, 404, 'Response status should be 404');
+				assert.equal(res.body.error, 'could not delete', 'Response should be "could not delete"');
 				done()
 			})	
 	});
@@ -290,11 +317,8 @@ suite('Functional Tests', function() {
 			.request(server)
 			.keepOpen()
 			.delete('/api/issues/project')
-			.send({
-				_id: issue_id
-			})
 			.end((err, res) => {
-				assert.equal(res.status, 404, 'Response status should be 404');
+				assert.equal(res.body.error, "missing _id", 'Response should be "missing _id"');
 				done()
 			})	
 	});
